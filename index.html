@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hope Map - Bản Đồ Hy Vọng</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 min-h-full">
+    <!-- Header -->
+    <header class="hope-gradient text-white py-8">
+        <div class="container mx-auto px-4 text-center">
+            <div class="floating mb-4">
+                <h1 class="text-5xl font-bold mb-2">🗺️ Hope Map</h1>
+                <p class="text-xl mb-4">Bản Đồ Hy Vọng</p>
+            </div>
+            <p class="text-lg opacity-90 max-w-2xl mx-auto">
+                "Khi bạn cảm thấy lạc lõng, hãy biết rằng vẫn có ánh sáng ở gần bạn — Hope Map sẽ dẫn đường."
+            </p>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-wrap justify-center py-4 space-x-2">
+                <button onclick="showSection('map')" id="nav-map" class="nav-btn px-6 py-2 rounded-full font-medium transition-all duration-300 bg-blue-500 text-white">
+                    🗺️ Bản Đồ
+                </button>
+                <button onclick="showSection('register')" id="nav-register" class="nav-btn px-6 py-2 rounded-full font-medium transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    📝 Đăng Ký
+                </button>
+                <button onclick="showSection('mood')" id="nav-mood" class="nav-btn px-6 py-2 rounded-full font-medium transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    😊 Tâm Trạng
+                </button>
+                <button onclick="showSection('chat')" id="nav-chat" class="nav-btn px-6 py-2 rounded-full font-medium transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    💬 Trò Chuyện
+                </button>
+                <button onclick="showSection('stories')" id="nav-stories" class="nav-btn px-6 py-2 rounded-full font-medium transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    📖 Câu Chuyện
+                </button>
+                <button onclick="showSection('resources')" id="nav-resources" class="nav-btn px-6 py-2 rounded-full font-medium transition-all duration-300 text-gray-600 hover:bg-gray-100">
+                    🎯 Nguồn Lực
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Map Section -->
+        <section id="map-section" class="section-content">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🌍 Bản Đồ Cộng Đồng Hỗ Trợ</h2>
+                
+                <!-- Legend -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="flex items-center justify-center p-4 bg-red-50 rounded-xl">
+                        <div class="w-4 h-4 bg-red-500 rounded-full pulse-dot mr-3"></div>
+                        <span class="font-medium text-red-700">Cần hỗ trợ khẩn cấp</span>
+                    </div>
+                    <div class="flex items-center justify-center p-4 bg-yellow-50 rounded-xl">
+                        <div class="w-4 h-4 bg-yellow-500 rounded-full pulse-dot mr-3"></div>
+                        <span class="font-medium text-yellow-700">Cần trò chuyện, lắng nghe</span>
+                    </div>
+                    <div class="flex items-center justify-center p-4 bg-green-50 rounded-xl">
+                        <div class="w-4 h-4 bg-green-500 rounded-full pulse-dot mr-3"></div>
+                        <span class="font-medium text-green-700">Tình nguyện viên sẵn sàng</span>
+                    </div>
+                </div>
+
+                <div class="map-container" id="hope-map"></div>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-gray-600 mb-4">
+                        🔒 Vị trí được ẩn danh hóa để bảo vệ quyền riêng tư. Chỉ hiển thị khu vực gần đúng.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="joinAsHelper()" class="bg-green-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors">
+                            🤝 Tôi Muốn Giúp Đỡ
+                        </button>
+                        <button onclick="requestHelp()" class="bg-blue-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-600 transition-colors">
+                            🙋‍♀️ Tôi Cần Hỗ Trợ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Register Section -->
+        <section id="register-section" class="section-content hidden">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Need Help Registration -->
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-6 text-center">🙋‍♀️ Tôi Cần Hỗ Trợ</h3>
+                    
+                    <form id="help-request-form" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Mức độ cần hỗ trợ:</label>
+                            <div class="space-y-3">
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <input type="radio" name="urgency" value="emergency" class="mr-3" required>
+                                    <div>
+                                        <div class="font-medium text-red-600">🚨 Khẩn cấp</div>
+                                        <div class="text-sm text-gray-600">Đang gặp khủng hoảng cảm xúc</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                                    <input type="radio" name="urgency" value="support" class="mr-3" required>
+                                    <div>
+                                        <div class="font-medium text-yellow-600">💛 Cần trò chuyện</div>
+                                        <div class="text-sm text-gray-600">Muốn có người lắng nghe, chia sẻ</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quận/Huyện (tùy chọn):</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="">Chọn quận/huyện</option>
+                                <option value="quan1">Quận 1</option>
+                                <option value="quan3">Quận 3</option>
+                                <option value="quan4">Quận 4</option>
+                                <option value="quan5">Quận 5</option>
+                                <option value="quan7">Quận 7</option>
+                                <option value="quan8">Quận 8</option>
+                                <option value="quan10">Quận 10</option>
+                                <option value="quan12">Quận 12</option>
+                                <option value="binhThanh">Quận Bình Thạnh</option>
+                                <option value="thuDuc">Quận Thủ Đức</option>
+                                <option value="tanBinh">Quận Tân Bình</option>
+                                <option value="phuNhuan">Quận Phú Nhuận</option>
+                                <option value="other">Khác</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phương thức liên hệ ưa thích:</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2"> Chat ẩn danh
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2"> Email tạm thời
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2"> Cuộc gọi (ẩn số)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Mô tả ngắn (tùy chọn):</label>
+                            <textarea rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Chia sẻ ngắn gọn về tình huống của bạn..."></textarea>
+                        </div>
+
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <label class="flex items-start">
+                                <input type="checkbox" class="mr-3 mt-1" required>
+                                <span class="text-sm text-blue-800">
+                                    Tôi hiểu rằng đây không phải dịch vụ y tế chuyên nghiệp và đồng ý chia sẻ thông tin ẩn danh để nhận hỗ trợ từ cộng đồng.
+                                </span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-500 text-white py-4 rounded-xl font-semibold hover:bg-blue-600 transition-colors">
+                            🚀 Đăng Ký Nhận Hỗ Trợ
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Helper Registration -->
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-green-600 mb-6 text-center">🤝 Tôi Muốn Giúp Đỡ</h3>
+                    
+                    <form id="helper-form" class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Loại hỗ trợ bạn có thể cung cấp:</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2"> Lắng nghe, trò chuyện
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2"> Tư vấn tâm lý (có chứng chỉ)
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2"> Hỗ trợ khẩn cấp
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2"> Kết nối nguồn lực
+                                </label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Kinh nghiệm/Chứng chỉ:</label>
+                            <textarea rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Mô tả ngắn về kinh nghiệm hoặc chứng chỉ liên quan..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Thời gian có thể hỗ trợ:</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                <option value="">Chọn khung giờ</option>
+                                <option value="morning">Buổi sáng (6h-12h)</option>
+                                <option value="afternoon">Buổi chiều (12h-18h)</option>
+                                <option value="evening">Buổi tối (18h-22h)</option>
+                                <option value="night">Ban đêm (22h-6h)</option>
+                                <option value="flexible">Linh hoạt</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Khu vực hoạt động:</label>
+                            <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                                <option value="">Chọn khu vực</option>
+                                <option value="quan1">Quận 1</option>
+                                <option value="quan3">Quận 3</option>
+                                <option value="quan4">Quận 4</option>
+                                <option value="quan5">Quận 5</option>
+                                <option value="quan7">Quận 7</option>
+                                <option value="quan8">Quận 8</option>
+                                <option value="quan10">Quận 10</option>
+                                <option value="quan12">Quận 12</option>
+                                <option value="binhThanh">Quận Bình Thạnh</option>
+                                <option value="thuDuc">Quận Thủ Đức</option>
+                                <option value="tanBinh">Quận Tân Bình</option>
+                                <option value="phuNhuan">Quận Phú Nhuận</option>
+                                <option value="online">Chỉ hỗ trợ online</option>
+                                <option value="allDistricts">Tất cả quận/huyện TP.HCM</option>
+                            </select>
+                        </div>
+
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <label class="flex items-start">
+                                <input type="checkbox" class="mr-3 mt-1" required>
+                                <span class="text-sm text-green-800">
+                                    Tôi cam kết hỗ trợ với tinh thần trách nhiệm, tôn trọng và bảo mật thông tin của người cần giúp đỡ.
+                                </span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="w-full bg-green-500 text-white py-4 rounded-xl font-semibold hover:bg-green-600 transition-colors">
+                            💚 Đăng Ký Tình Nguyện Viên
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mood Tracker Section -->
+        <section id="mood-section" class="section-content hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">😊 Theo Dõi Tâm Trạng Hàng Ngày</h2>
+                
+                <div class="max-w-4xl mx-auto">
+                    <p class="text-gray-600 text-center mb-8">
+                        Ghi lại cảm xúc của bạn mỗi ngày. Dữ liệu sẽ được ẩn danh và giúp cộng đồng hiểu rõ hơn về tình hình sức khỏe tâm thần.
+                    </p>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center" onclick="selectMood('happy')">
+                            <div class="text-4xl mb-2">😊</div>
+                            <div class="font-medium">Vui vẻ</div>
+                            <div class="text-sm text-gray-600">Cảm thấy tích cực</div>
+                        </div>
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center" onclick="selectMood('neutral')">
+                            <div class="text-4xl mb-2">😐</div>
+                            <div class="font-medium">Bình thường</div>
+                            <div class="text-sm text-gray-600">Không có gì đặc biệt</div>
+                        </div>
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center" onclick="selectMood('sad')">
+                            <div class="text-4xl mb-2">😔</div>
+                            <div class="font-medium">Buồn</div>
+                            <div class="text-sm text-gray-600">Cảm thấy u sầu</div>
+                        </div>
+                        <div class="mood-card p-6 border-2 border-gray-200 rounded-2xl text-center" onclick="selectMood('anxious')">
+                            <div class="text-4xl mb-2">😰</div>
+                            <div class="font-medium">Lo âu</div>
+                            <div class="text-sm text-gray-600">Cảm thấy căng thẳng</div>
+                        </div>
+                    </div>
+
+                    <div id="mood-details" class="hidden mb-8">
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h3 class="text-lg font-semibold mb-4">Chia sẻ thêm về cảm xúc của bạn:</h3>
+                            <textarea id="mood-note" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Điều gì khiến bạn cảm thấy như vậy? (tùy chọn)"></textarea>
+                            <button onclick="saveMood()" class="mt-4 bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                💾 Lưu Tâm Trạng
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Community Stats -->
+                    <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6">
+                        <h3 class="text-lg font-semibold mb-4 text-center">📊 Thống Kê Cộng Đồng Hôm Nay</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">😊</div>
+                                <div class="text-2xl font-bold text-green-600">45%</div>
+                                <div class="text-sm text-gray-600">Vui vẻ</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">😐</div>
+                                <div class="text-2xl font-bold text-gray-600">30%</div>
+                                <div class="text-sm text-gray-600">Bình thường</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">😔</div>
+                                <div class="text-2xl font-bold text-yellow-600">20%</div>
+                                <div class="text-sm text-gray-600">Buồn</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">😰</div>
+                                <div class="text-2xl font-bold text-red-600">5%</div>
+                                <div class="text-sm text-gray-600">Lo âu</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Section -->
+        <section id="chat-section" class="section-content hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">💬 Phòng Trò Chuyện Ẩn Danh</h2>
+                
+                <div class="max-w-4xl mx-auto">
+                    <div class="grid md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-blue-50 rounded-xl p-6 text-center cursor-pointer hover:bg-blue-100 transition-colors" onclick="joinChatRoom('general')">
+                            <div class="text-3xl mb-2">💙</div>
+                            <h3 class="font-semibold">Phòng Chung</h3>
+                            <p class="text-sm text-gray-600">Trò chuyện thoải mái</p>
+                            <div class="text-green-600 text-sm mt-2">🟢 24 người online</div>
+                        </div>
+                        <div class="bg-yellow-50 rounded-xl p-6 text-center cursor-pointer hover:bg-yellow-100 transition-colors" onclick="joinChatRoom('support')">
+                            <div class="text-3xl mb-2">🤗</div>
+                            <h3 class="font-semibold">Phòng Hỗ Trợ</h3>
+                            <p class="text-sm text-gray-600">Chia sẻ và lắng nghe</p>
+                            <div class="text-green-600 text-sm mt-2">🟢 12 người online</div>
+                        </div>
+                        <div class="bg-green-50 rounded-xl p-6 text-center cursor-pointer hover:bg-green-100 transition-colors" onclick="joinChatRoom('recovery')">
+                            <div class="text-3xl mb-2">🌱</div>
+                            <h3 class="font-semibold">Phòng Hồi Phục</h3>
+                            <p class="text-sm text-gray-600">Câu chuyện tích cực</p>
+                            <div class="text-green-600 text-sm mt-2">🟢 8 người online</div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Interface -->
+                    <div id="chat-interface" class="hidden">
+                        <div class="border rounded-xl overflow-hidden">
+                            <div class="bg-gray-100 p-4 border-b">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="font-semibold" id="chat-room-title">Phòng Chung</h3>
+                                    <button onclick="leaveChatRoom()" class="text-red-600 hover:text-red-700">
+                                        ❌ Rời phòng
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="chat-container p-4 bg-gray-50" id="chat-messages">
+                                <!-- Messages will be inserted here -->
+                            </div>
+                            
+                            <div class="p-4 border-t bg-white">
+                                <div class="flex gap-2">
+                                    <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                    <button onclick="sendMessage()" class="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors">
+                                        Gửi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hotlines -->
+                    <div class="mt-8 bg-red-50 border border-red-200 rounded-xl p-6">
+                        <h3 class="text-lg font-semibold text-red-800 mb-4 text-center">🚨 Đường Dây Nóng Khẩn Cấp</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <a href="tel:115" class="block bg-red-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors">
+                                📞 Cấp cứu: 115
+                            </a>
+                            <a href="tel:19006149" class="block bg-blue-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                                💙 Tâm lý: 1900 6149
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stories Section -->
+        <section id="stories-section" class="section-content hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">📖 Câu Chuyện Hy Vọng</h2>
+                
+                <div class="max-w-4xl mx-auto">
+                    <p class="text-gray-600 text-center mb-8">
+                        Những câu chuyện hồi phục và hy vọng từ cộng đồng. Mỗi câu chuyện là một nguồn cảm hứng cho hành trình của bạn.
+                    </p>
+
+                    <div class="grid md:grid-cols-2 gap-6 mb-8">
+                        <div class="story-card rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                    A
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Anh Minh</div>
+                                    <div class="text-sm text-gray-600">Quận 1, TP.HCM • 2 tháng trước</div>
+                                </div>
+                            </div>
+                            <h3 class="font-semibold mb-2">Từ Trầm Cảm Đến Hy Vọng</h3>
+                            <p class="text-gray-700 text-sm mb-4">
+                                "6 tháng trước, tôi cảm thấy như thế giới sụp đổ. Nhờ có Hope Map, tôi đã kết nối được với chị Lan - một tình nguyện viên tuyệt vời. Giờ đây, tôi cũng trở thành tình nguyện viên để giúp đỡ người khác..."
+                            </p>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <span class="mr-4">💙 124 lượt thích</span>
+                                <span>💬 18 bình luận</span>
+                            </div>
+                        </div>
+
+                        <div class="story-card rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                    L
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Chị Linh</div>
+                                    <div class="text-sm text-gray-600">Quận 7, TP.HCM • 1 tuần trước</div>
+                                </div>
+                            </div>
+                            <h3 class="font-semibold mb-2">Tìm Lại Niềm Tin</h3>
+                            <p class="text-gray-700 text-sm mb-4">
+                                "Sau khi ly hôn, tôi mất phương hướng hoàn toàn. Phòng chat hỗ trợ trên Hope Map đã cho tôi một không gian an toàn để chia sẻ. Cảm ơn tất cả mọi người đã lắng nghe và động viên..."
+                            </p>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <span class="mr-4">💙 89 lượt thích</span>
+                                <span>💬 12 bình luận</span>
+                            </div>
+                        </div>
+
+                        <div class="story-card rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                    T
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Em Trang</div>
+                                    <div class="text-sm text-gray-600">Quận Thủ Đức, TP.HCM • 3 ngày trước</div>
+                                </div>
+                            </div>
+                            <h3 class="font-semibold mb-2">Vượt Qua Lo Âu Học Tập</h3>
+                            <p class="text-gray-700 text-sm mb-4">
+                                "Áp lực thi đại học khiến em mất ngủ suốt nhiều tháng. Nhờ mood tracker và các bài tập thở trên Hope Map, em đã học cách quản lý cảm xúc tốt hơn. Kết quả thi cũng tốt hơn em mong đợi!"
+                            </p>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <span class="mr-4">💙 156 lượt thích</span>
+                                <span>💬 25 bình luận</span>
+                            </div>
+                        </div>
+
+                        <div class="story-card rounded-xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold mr-4">
+                                    H
+                                </div>
+                                <div>
+                                    <div class="font-semibold">Anh Hùng</div>
+                                    <div class="text-sm text-gray-600">Quận Bình Thạnh, TP.HCM • 5 ngày trước</div>
+                                </div>
+                            </div>
+                            <h3 class="font-semibold mb-2">Từ Tình Nguyện Viên Đến Chuyên Gia</h3>
+                            <p class="text-gray-700 text-sm mb-4">
+                                "Bắt đầu như một tình nguyện viên trên Hope Map, tôi nhận ra đam mê của mình với tư vấn tâm lý. Giờ đây, tôi đã hoàn thành khóa học và trở thành counselor chính thức. Hope Map đã thay đổi cuộc đời tôi!"
+                            </p>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <span class="mr-4">💙 203 lượt thích</span>
+                                <span>💬 31 bình luận</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button onclick="shareStory()" class="bg-purple-500 text-white px-8 py-3 rounded-xl font-semibold hover:bg-purple-600 transition-colors">
+                            ✍️ Chia Sẻ Câu Chuyện Của Bạn
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resources Section -->
+        <section id="resources-section" class="section-content hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">🎯 Nguồn Lực Hỗ Trợ</h2>
+                
+                <div class="max-w-4xl mx-auto">
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Professional Help -->
+                        <div class="bg-blue-50 rounded-xl p-6">
+                            <div class="text-3xl mb-4">👨‍⚕️</div>
+                            <h3 class="text-lg font-semibold mb-3">Chuyên Gia Tâm Lý</h3>
+                            <ul class="space-y-2 text-sm text-gray-700 mb-4">
+                                <li>• Bệnh viện Tâm thần Trung ương</li>
+                                <li>• Trung tâm Tư vấn Tâm lý UEH</li>
+                                <li>• Phòng khám Tâm lý Thiện Nhân</li>
+                            </ul>
+                            <button class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                                Xem Danh Sách
+                            </button>
+                        </div>
+
+                        <!-- Support Groups -->
+                        <div class="bg-green-50 rounded-xl p-6">
+                            <div class="text-3xl mb-4">👥</div>
+                            <h3 class="text-lg font-semibold mb-3">Nhóm Hỗ Trợ</h3>
+                            <ul class="space-y-2 text-sm text-gray-700 mb-4">
+                                <li>• Nhóm Hỗ trợ Trầm cảm</li>
+                                <li>• Cộng đồng Lo âu Xã hội</li>
+                                <li>• Nhóm Phục hồi Tâm lý</li>
+                            </ul>
+                            <button class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors">
+                                Tham Gia Nhóm
+                            </button>
+                        </div>
+
+                        <!-- Meditation -->
+                        <div class="bg-purple-50 rounded-xl p-6">
+                            <div class="text-3xl mb-4">🧘‍♀️</div>
+                            <h3 class="text-lg font-semibold mb-3">Thiền & Thư Giãn</h3>
+                            <ul class="space-y-2 text-sm text-gray-700 mb-4">
+                                <li>• Bài thiền 5 phút</li>
+                                <li>• Thở sâu giảm stress</li>
+                                <li>• Yoga cho tâm hồn</li>
+                            </ul>
+                            <button class="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                                Bắt Đầu Thiền
+                            </button>
+                        </div>
+
+                        <!-- Educational Content -->
+                        <div class="bg-yellow-50 rounded-xl p-6">
+                            <div class="text-3xl mb-4">📚</div>
+                            <h3 class="text-lg font-semibold mb-3">Tài Liệu Học Tập</h3>
+                            <ul class="space-y-2 text-sm text-gray-700 mb-4">
+                                <li>• Hiểu về Trầm cảm</li>
+                                <li>• Quản lý Lo âu</li>
+                                <li>• Kỹ năng Đối phó</li>
+                            </ul>
+                            <button class="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 transition-colors">
+                                Đọc Tài Liệu
+                            </button>
+                        </div>
+
+                        <!-- Crisis Resources -->
+                        <div class="bg-red-50 rounded-xl p-6">
+                            <div class="text-3xl mb-4">🚨</div>
+                            <h3 class="text-lg font-semibold mb-3">Hỗ Trợ Khẩn Cấp</h3>
+                            <ul class="space-y-2 text-sm text-gray-700 mb-4">
+                                <li>• Đường dây nóng 24/7</li>
+                                <li>• Chat khẩn cấp</li>
+                                <li>• Địa chỉ cấp cứu</li>
+                            </ul>
+                            <button class="w-full bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors">
+                                Liên Hệ Ngay
+                            </button>
+                        </div>
+
+                        <!-- Apps & Tools -->
+                        <div class="bg-indigo-50 rounded-xl p-6">
+                            <div class="text-3xl mb-4">📱</div>
+                            <h3 class="text-lg font-semibold mb-3">Ứng Dụng Hỗ Trợ</h3>
+                            <ul class="space-y-2 text-sm text-gray-700 mb-4">
+                                <li>• Mood tracking apps</li>
+                                <li>• Meditation apps</li>
+                                <li>• Sleep helpers</li>
+                            </ul>
+                            <button class="w-full bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-600 transition-colors">
+                                Tải Ứng Dụng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="hope-gradient text-white py-8 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <div class="mb-4">
+                <h3 class="text-2xl font-bold mb-2">🗺️ Hope Map</h3>
+                <p class="opacity-90">Kết nối - Chia sẻ - Hồi phục</p>
+            </div>
+            <div class="text-sm opacity-75">
+                <p>© 2025 Hope Map. Được tạo ra với ❤️ để hỗ trợ cộng đồng sức khỏe tâm thần.</p>
+                <p class="mt-2">Đây không phải dịch vụ y tế chuyên nghiệp. Trong trường hợp khẩn cấp, vui lòng liên hệ 115.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>
